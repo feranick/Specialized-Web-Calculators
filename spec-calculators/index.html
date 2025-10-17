@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specialized Web Calculators</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" href="./icon.png">
+    <link rel="apple-touch-icon" href="./icon192.png">
+    <link rel="manifest" href="./manifest.json">
+    <style>
+        /* Base styles from your request */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            color: #1f2937; /* Dark text for contrast */
+        }
+
+        h1 {
+            color: #4f46e5; /* Primary color for heading */
+            margin-bottom: 0.5em;
+        }
+
+        .redirect-button {
+            /* Sizing and Spacing */
+            padding: 12px 28px;
+            margin: 20px 10px;
+            
+            /* Aesthetics */
+            background-color: #4f46e5; /* Primary color */
+            color: white;
+            border: none;
+            border-radius: 8px; /* Slightly rounded corners */
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); /* Subtle shadow */
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+        }
+
+        /* Hover effect */
+        .redirect-button:hover {
+            background-color: #4338ca; /* Slightly darker shade on hover */
+            box-shadow: 0 6px 15px rgba(67, 56, 202, 0.4);
+        }
+
+        /* Active/Click effect */
+        .redirect-button:active {
+            transform: translateY(1px); /* Little press effect */
+            box-shadow: 0 3px 8px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Unused slider styles are still here for completeness if you add a slider later */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            background: #e0e7ff;
+            border-radius: 6px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 24px;
+            width: 24px;
+            background: #4f46e5;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+            transition: background 0.15s ease-in-out;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #4338ca;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Specialized Web Calculators</h1>
+
+    <button class="redirect-button" onclick="redirectToPage('wet-bulb-temp.html')">
+        🌡️ Wet-Bulb Temperature Calculator
+    </button>
+
+    <!--<button class="redirect-button" onclick="redirectToPage('data-table.html')">
+        📊 View Historical Data Table
+    </button>-->
+
+    <script>
+        // JavaScript function to handle the redirection
+        function redirectToPage(pageUrl) {
+            // window.location.href changes the browser's current page
+            window.location.href = pageUrl;
+        }
+    </script>
+</body>
+</html>
