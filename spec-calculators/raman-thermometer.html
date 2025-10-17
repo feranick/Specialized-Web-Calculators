@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raman Thermometer</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'indigo-700': '#4338ca',
+                        'indigo-600': '#4f46e5',
+                        'indigo-100': '#e0e7ff',
+                        'gray-900': '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+        }
+        .app-input {
+            @apply block w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-base;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="calculator-card" class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl border-t-4 border-indigo-600">
+
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Raman Thermometer</h1>
+        <p class="text-sm text-gray-500 mb-6">
+            Calculates the surface temperature of a Raman-active material from the ratio of Stokes to Anti-Stokes peak intensities.
+        </p>
+
+        <div class="space-y-6">
+
+            <!-- --- LASER AND PHONON PEAK SELECTION (Vertical Stacked) --- -->
+            <div class="grid grid-cols-1 gap-6 p-4 bg-indigo-50 rounded-lg shadow-inner">
+
+                <!-- Laser Wavelength Group -->
+                <div>
+                    <label for="laserSelect" class="block text-sm font-medium text-gray-700 mb-1">
+                        1. Laser Wavelength (&lambda;):
+                    </label>
+                    <div class="flex space-x-2">
+                        <select id="laserSelect" onchange="laserSelectChange()" class="app-input flex-grow">
+                            <option value="632.72">Red laser (632.72 nm)</option>
+                            <option value="472.817">Blue laser (472.817 nm)</option>
+                            <option value="488">Green laser (488 nm)</option>
+                        </select>
+                        <input type="number" id="lambdaInput" value="632.72" step="0.01" oninput="calculateTemperature()" class="app-input w-32 text-right" title="Wavelength (nm)">
+                        <span class="p-2 text-gray-600">nm</span>
+                    </div>
+                </div>
+
+                <!-- Phonon Peak Group -->
+                <div>
+                    <label for="peakSelect" class="block text-sm font-medium text-gray-700 mb-1">
+                        2. Phonon Peak Position:
+                    </label>
+                    <div class="flex space-x-2">
+                        <select id="peakSelect" onchange="peakSelectChange()" class="app-input flex-grow">
+                            <option value="1592">G peak - Graphene/CNT (1592 cm<sup>-1</sup>)</option>
+                            <option value="1340">D peak - Graphene/CNT (1340 cm<sup>-1</sup>)</option>
+                            <option value="521.581">Si (521.6 cm<sup>-1</sup>)</option>
+                            <option value="785">SiC (785 cm<sup>-1</sup>)</option>
+                        </select>
+                        <input type="number" id="peakInput" value="1592" step="0.1" oninput="calculateTemperature()" class="app-input w-32 text-right" title="Phonon Peak ($cm^{-1}$)">
+                        <span class="p-2 text-gray-600">cm<sup class="text-xs">-1</sup></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-indigo-50 rounded-lg shadow-inner">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    
+                    <!-- 3. Stokes Intensity -->
+                    <div class="col-span-1">
+                        <label for="stokesIntensity" class="block text-sm font-medium text-gray-700 mb-1">
+                            3. Stokes Intensity (I<sub>s</sub>)
+                        </label>
+                        <input type="number" id="stokesIntensity" value="4300" oninput="calculateTemperature()" class="app-input text-right">
+                    </div>
+                    
+                    <!-- 4. Anti-Stokes Intensity -->
+                    <div class="col-span-1">
+                        <label for="antiStokesIntensity" class="block text-sm font-medium text-gray-700 mb-1">
+                            4. Anti-Stokes Intensity (I<sub>AS</sub>)
+                        </label>
+                        <input type="number" id="antiStokesIntensity" value="346" oninput="calculateTemperature()" class="app-input text-right">
+                    </div>
+                    
+                    <!-- 5. Baseline -->
+                    <div class="col-span-1">
+                        <label for="baseline" class="block text-sm font-medium text-gray-700 mb-1">
+                            5. Baseline (I<sub>baseline</sub>)
+                        </label>
+                        <input type="number" id="baseline" value="0" oninput="calculateTemperature()" class="app-input text-right">
+                    </div>
+                    
+                    <!-- 6. I_S/I_AS Ratio - Span all 3 columns on large screen to force it onto its own line -->
+                    <div class="lg:col-span-3">
+                        <label for="ratioInput" class="block text-sm font-medium text-gray-700 mb-1">
+                            6. I<sub>S</sub>/I<sub>AS</sub> Ratio
+                        </label>
+                        <!-- Readonly field for calculated ratio -->
+                        <input type="text" id="ratioInput" value="" readonly class="app-input text-right bg-gray-100 cursor-not-allowed">
+                    </div>
+                </div>
+            </div>
+
+            <p id="warning" class="text-red-600 text-sm h-5"></p>
+
+            <!-- Reset Button (Optional) -->
+            <div class="flex justify-start">
+                <button onclick="resetForm()" class="px-4 py-2 text-sm font-medium rounded-lg text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition duration-150">
+                    Reset to Default Values
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Display -->
+        <div class="mt-8 text-center bg-indigo-600 text-white p-6 rounded-xl shadow-lg border-b-8 border-indigo-700">
+            <h2 class="text-md font-semibold mb-2 uppercase tracking-wider">Estimated Surface Temperature ($T$)</h2>
+            <p id="result" class="text-5xl font-extrabold flex items-center justify-center transition-colors duration-300 min-h-[3rem]">
+                <!-- Result will appear here -->
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // Constants used in the Raman Thermometry calculation
+        // h*c / k_B * 10^-7 (to handle cm^-1 * nm conversions implicitly)
+        const PLANCK_CONST_FACTOR = 1.43877506; // Constant related to E/k_B (eV to K)
+        const WAVENUMBER_FACTOR = 1.0e7;      // Constant to convert 1/lambda from nm^-1 to cm^-1
+
+        // Default peak values in cm^-1
+        const PEAKS = {
+            'Gpeak': 1592,
+            'Dpeak': 1340,
+            'Sipeak': 521.581,
+            'SiCpeak': 785
+        };
+
+        /**
+         * Selects the correct wavelength based on the dropdown choice.
+         */
+        function laserSelectChange() {
+            const select = document.getElementById('laserSelect');
+            const lambdaInput = document.getElementById('lambdaInput');
+            lambdaInput.value = select.value;
+            calculateTemperature();
+        }
+
+        /**
+         * Selects the correct phonon peak based on the dropdown choice.
+         */
+        function peakSelectChange() {
+            const select = document.getElementById('peakSelect');
+            const peakInput = document.getElementById('peakInput');
+            peakInput.value = select.value;
+            calculateTemperature();
+        }
+
+        /**
+         * Calculates the Raman temperature (T) in Kelvin.
+         */
+        function calculateTemperature() {
+            const lambdaInput = document.getElementById('lambdaInput');
+            const peakInput = document.getElementById('peakInput');
+            const SInput = document.getElementById('stokesIntensity');
+            const ASInput = document.getElementById('antiStokesIntensity');
+            const baseInput = document.getElementById('baseline');
+            const ratioOutput = document.getElementById('ratioInput');
+            const resultElement = document.getElementById('result');
+            const warningElement = document.getElementById('warning');
+
+            // --- Input Parsing ---
+            const lambda = parseFloat(lambdaInput.value); // Laser wavelength (nm)
+            const peak = parseFloat(peakInput.value);     // Phonon peak (cm^-1)
+            const S = parseFloat(SInput.value);           // Stokes intensity
+            const AS = parseFloat(ASInput.value);         // Anti-Stokes intensity
+            const base = parseFloat(baseInput.value) || 0; // Baseline intensity (default to 0)
+
+            resultElement.innerHTML = '';
+            warningElement.textContent = '';
+
+            // --- Validation ---
+            if (isNaN(lambda) || isNaN(peak) || isNaN(S) || isNaN(AS) || isNaN(base)) {
+                warningElement.textContent = 'Please ensure all inputs are valid numbers.';
+                return;
+            }
+            
+            const net_S = S - base;
+            const net_AS = AS - base;
+
+            if (net_S <= 0 || net_AS <= 0) {
+                warningElement.textContent = 'Net Stokes and Anti-Stokes intensities must be positive.';
+                ratioOutput.value = 'N/A';
+                return;
+            }
+            
+            const ratio = net_S / net_AS;
+            ratioOutput.value = ratio.toFixed(2);
+
+            // --- Raman Temperature Formula ---
+
+            // 1. Calculate the coefficient ratio (Cas / Cs)
+            // coeff = ( (WAVENUMBER_FACTOR/lambda) + peak )^3 / ( (WAVENUMBER_FACTOR/lambda) - peak )^3
+            // WAVENUMBER_FACTOR/lambda converts lambda (nm) to 1/lambda (cm^-1) 
+            const lambda_inv = WAVENUMBER_FACTOR / lambda; 
+            const coeff = Math.pow((lambda_inv + peak) / (lambda_inv - peak), 3);
+
+            // 2. Calculate Temperature (T) in Kelvin
+            // T = (peak * PLANCK_CONST_FACTOR) / ln( (Is/Ias) * coeff )
+            const logTerm = Math.log(ratio * coeff);
+            
+            // Check for negative or non-physical argument in log (logTerm <= 0)
+            if (logTerm <= 0) {
+                resultElement.innerHTML = `<span class="text-4xl">Error</span>`;
+                warningElement.textContent = 'Log argument is non-positive. Check inputs (Is/Ias must be > 1).';
+                return;
+            }
+
+            const tempK = (peak * PLANCK_CONST_FACTOR) / logTerm;
+            
+            // --- Display Result ---
+            if (tempK <= 0) {
+                resultElement.innerHTML = `<span class="text-4xl">Negative Temp</span>`;
+                warningElement.textContent = 'Calculation resulted in a non-physical negative temperature.';
+            } else {
+                const tempC = tempK - 273.15; // Adjusted 273.3 to standard 273.15
+                resultElement.innerHTML = `
+                    <div class="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4">
+                        <span class="text-4xl font-extrabold">${tempK.toFixed(1)} K</span>
+                        <span class="text-xl">(${tempC.toFixed(1)} &deg;C)</span>
+                    </div>
+                `;
+            }
+        }
+        
+        /**
+         * Resets the form to its initial default values.
+         */
+        function resetForm() {
+            document.getElementById('laserSelect').value = '632.72';
+            document.getElementById('lambdaInput').value = '632.72';
+            
+            document.getElementById('peakSelect').value = '1592';
+            document.getElementById('peakInput').value = '1592';
+            
+            document.getElementById('stokesIntensity').value = '4300';
+            document.getElementById('antiStokesIntensity').value = '346';
+            document.getElementById('baseline').value = '0';
+            
+            calculateTemperature();
+        }
+
+
+        // --- Initialization ---
+        window.onload = function() {
+            // Run the calculation immediately on load
+            calculateTemperature();
+        };
+
+    </script>
+</body>
+</html>
